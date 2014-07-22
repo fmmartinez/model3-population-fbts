@@ -140,13 +140,14 @@ MC: do mcs = 1, nmcs
       
 !      call get_hm(nmap,ng,nb,lmd,basispc,delta,mu,et,a1,a2,kg,kb,kd,vg,vb,vd,hm)
       call get_hm2(nmap,ng,nb,mu,et,a1,a2,hs,hm)
-      call make_hm_traceless(nmap,hm,tn)
+      !call make_hm_traceless(nmap,hm,tn)
 !if (it == 500) then
 !write(*,*) 'mapping hamiltonian'
 !write(*,fmt2) hm
 !stop
 !end if
       call evolve_pm(nmap,dt2,hm,rm,pm)
+      call evolve_pm(nmap,dt2,hm,rn,pn)
 
       do is = 1, nosc
          x(is) = x(is) + dt*p(is)
@@ -160,11 +161,13 @@ MC: do mcs = 1, nmcs
 !      call update_hm(nmap,ng,nb,lmd,basispc,delta,mu,et,a1,a2,kg,kb,kd,vg,vb,vd,hm)
 !      call update_hm2(nmap,ng,nb,delta,mu,et,a1,a2,hc,hm)
       call get_hm2(nmap,ng,nb,mu,et,a1,a2,hs,hm)
-      call make_hm_traceless(nmap,hm,tn)
+      !call make_hm_traceless(nmap,hm,tn)
 
       call evolve_rm(nmap,dt,hm,pm,rm)
+      call evolve_rm(nmap,dt,hm,pn,rn)
 
       call evolve_pm(nmap,dt2,hm,rm,pm)
+      call evolve_pm(nmap,dt2,hm,rn,pn)
 
       call get_force_fb(nmap,ng,nb,lld,kosc,x,c2,rm,pm,rn,pn,fx)
       
