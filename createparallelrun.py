@@ -6,14 +6,14 @@ import shutil
 
 #modules to load for execution in certain clusters, leave blank if none
 #following is used for jasper
-module = 'compiler/intel/13.0.1'
-#module = ''
+#module = 'compiler/intel/13.0.1'
+module = ''
 
 #TORQUE will use the following email to inform details about your jobs
 email = 'fmmartin@ualberta.ca'
 
 #number of processors to use
-nproc = 100
+nproc = 10
 
 #trajectories per processor
 tpp = 5000
@@ -21,7 +21,7 @@ tpp = 5000
 timestep = '5d-5'
 
 #Wall time
-walltime = '24:00:00'
+walltime = '1:00:00'
 
 #Model stuff
 
