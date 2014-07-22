@@ -136,17 +136,17 @@ end do
 
 end subroutine get_totalenergy_traceless
 
-subroutine get_coeff(ng,beta,omega,rm,pm,coeff)
+subroutine get_coeff(ng,beta,omega,rm,pm,rn,pn,coeff)
 implicit none
 
+complex(8),intent(out) :: coeff
 
 integer :: i
 integer,intent(in) :: ng
 
 real(8) :: z
 real(8),intent(in) :: beta,omega
-real(8),intent(out) :: coeff
-real(8),dimension(:),intent(in) :: rm,pm
+real(8),dimension(:),intent(in) :: rm,pm,rn,pn
 real(8),dimension(:),allocatable :: exp_be,prob
 
 allocate(exp_be(1:ng),prob(1:ng))
@@ -166,7 +166,7 @@ coeff = 0d0
 !only diagonal because in the ngxng matrix by construction their lambdas are
 ! (1,0,0...), (0,1,0...), (0,0,1...), etc
 do i = 1, ng
-   coeff = coeff + (rm(i)**2 + pm(i)**2 - 0.5d0)*prob(i)
+   coeff = coeff + cmplx(rm(i),pm(i))*cmplx(rn(i),-pn(i))*prob(i)
 end do
 
 deallocate(exp_be)
