@@ -114,7 +114,7 @@ MC: do mcs = 1, nmcs
 !      popt(ib)   = popt(ib) + facn(i)
 !   end do
 
-   call get_facts_pop(nmap,ng,nb,coeff,rm,pm,fact1,fact2,fact3)
+   call get_facts_pop(nmap,ng,nb,coeff,rm,pm,rn,pn,fact1,fact2,fact3)
 
    pop(ib)  = pop(ib)  + (fact1+fact2+fact3)
    pop1(ib) = pop1(ib) + (fact1)
@@ -180,7 +180,7 @@ MC: do mcs = 1, nmcs
 !         popt(ib)   = popt(ib) + facn(i)
 !      end do
 
-      call get_facts_pop(nmap,ng,nb,coeff,rm,pm,fact1,fact2,fact3)
+      call get_facts_pop(nmap,ng,nb,coeff,rm,pm,rn,pn,fact1,fact2,fact3)
       
       pop(ib)  = pop(ib)  + (fact1+fact2+fact3)
       pop1(ib) = pop1(ib) + (fact1)

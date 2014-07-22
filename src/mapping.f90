@@ -315,31 +315,32 @@ end do
 fact3 = coeff*fact3
 end subroutine get_facts_pop_traceless
 
-subroutine get_facts_pop(nmap,ng,nb,coeff,rm,pm,fact1,fact2,fact3)
+subroutine get_facts_pop(nmap,ng,nb,coeff,rm,pm,rn,pn,fact1,fact2,fact3)
 implicit none
+
+complex(8),intent(in) :: coeff
+complex(8),intent(out) :: fact1,fact2,fact3
 
 integer :: a,b
 integer,intent(in) :: nmap,ng,nb
 
-real(8),intent(in) :: coeff
-real(8),intent(out) :: fact1,fact2,fact3
-real(8),dimension(:),intent(in) :: rm,pm
+real(8),dimension(:),intent(in) :: rm,pm,rn,pn
 
 fact1 = 0d0
 do a = 1, ng
-   fact1 = fact1 + (rm(a)**2 + pm(a)**2 - 1d0)
+   fact1 = fact1 + cmplx(rm(a),-pm(a))*cmplx(rn(a),pn(a))
 end do
 fact1 = coeff*fact1
 
 fact2 = 0d0
 do a = ng+1, ng+nb
-   fact2 = fact2 + (rm(a)**2 + pm(a)**2 - 1d0)
+   fact2 = fact2 + cmplx(rm(a),-pm(a))*cmplx(rn(a),pn(a))
 end do
 fact2 = coeff*fact2
 
 fact3 = 0d0
 do a = ng+nb+1, nmap
-   fact3 = fact3 + (rm(a)**2 + pm(a)**2 - 1d0)
+   fact3 = fact3 + cmplx(rm(a),-pm(a))*cmplx(rn(a),pn(a))
 end do
 fact3 = coeff*fact3
 end subroutine get_facts_pop
