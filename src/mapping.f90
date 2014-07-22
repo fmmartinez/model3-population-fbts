@@ -6,6 +6,48 @@ real(8),parameter :: pi=3.1415926535d0
 
 contains
 
+subroutine get_force_fb(nmap,ng,nb,lld,kosc,x,c2,rm,pm,rn,pn,f)
+implicit none
+
+real(8),dimension(:),intent(in) :: rm,pm,rn,pn,x
+real(8),dimension(:),intent(out) :: f
+
+integer :: a,b,i,j,n
+integer,intent(in) :: nmap,ng,nb
+
+real(8) :: trace,tn
+real(8),dimension(:),intent(in) :: kosc,c2
+real(8),dimension(:,:),intent(in) :: lld
+real(8),dimension(:,:),allocatable :: dh
+
+allocate(dh(1:nmap,1:nmap))
+
+n = size(x)
+
+f = 0d0
+do j = 1, n
+   f(j) = -kosc(j)*x(j)
+   
+   dh = (lld)*c2(j)
+   
+   trace = 0d0
+   do a = 1, nmap
+      trace = trace + dh(a,a)
+   end do
+
+   tn = trace/nmap
+   
+   f(j) = f(j) - tn
+
+   do a = 1, nmap
+      do b = 1, nmap
+         f(j) = f(j) - 0.5d0*dh(a,b)*(rm(a)*rm(b) + pm(a)*pm(b) + rn(a)*rn(b) + pn(a)*pn(b))
+      end do
+   end do
+end do
+
+end subroutine get_force_fb
+
 subroutine get_force_traceless(nmap,ng,nb,lld,kosc,x,c2,rm,pm,f)
 implicit none
 
@@ -136,17 +178,17 @@ end do
 
 end subroutine get_totalenergy_traceless
 
-subroutine get_coeff(ng,beta,omega,rm,pm,coeff)
+subroutine get_coeff(ng,beta,omega,rm,pm,rn,pn,coeff)
 implicit none
 
+complex(8),intent(out) :: coeff
 
 integer :: i
 integer,intent(in) :: ng
 
 real(8) :: z
 real(8),intent(in) :: beta,omega
-real(8),intent(out) :: coeff
-real(8),dimension(:),intent(in) :: rm,pm
+real(8),dimension(:),intent(in) :: rm,pm,rn,pn
 real(8),dimension(:),allocatable :: exp_be,prob
 
 allocate(exp_be(1:ng),prob(1:ng))
@@ -166,7 +208,7 @@ coeff = 0d0
 !only diagonal because in the ngxng matrix by construction their lambdas are
 ! (1,0,0...), (0,1,0...), (0,0,1...), etc
 do i = 1, ng
-   coeff = coeff + (rm(i)**2 + pm(i)**2 - 0.5d0)*prob(i)
+   coeff = coeff + cmplx(rm(i),pm(i))*cmplx(rn(i),-pn(i))*prob(i)
 end do
 
 deallocate(exp_be)
@@ -272,31 +314,32 @@ end do
 fact3 = coeff*fact3
 end subroutine get_facts_pop_traceless
 
-subroutine get_facts_pop(nmap,ng,nb,coeff,rm,pm,fact1,fact2,fact3)
+subroutine get_facts_pop(nmap,ng,nb,coeff,rm,pm,rn,pn,fact1,fact2,fact3)
 implicit none
+
+complex(8),intent(in) :: coeff
+complex(8),intent(out) :: fact1,fact2,fact3
 
 integer :: a,b
 integer,intent(in) :: nmap,ng,nb
 
-real(8),intent(in) :: coeff
-real(8),intent(out) :: fact1,fact2,fact3
-real(8),dimension(:),intent(in) :: rm,pm
+real(8),dimension(:),intent(in) :: rm,pm,rn,pn
 
 fact1 = 0d0
 do a = 1, ng
-   fact1 = fact1 + (rm(a)**2 + pm(a)**2 - 1d0)
+   fact1 = fact1 + cmplx(rm(a),-pm(a))*cmplx(rn(a),pn(a))
 end do
 fact1 = coeff*fact1
 
 fact2 = 0d0
 do a = ng+1, ng+nb
-   fact2 = fact2 + (rm(a)**2 + pm(a)**2 - 1d0)
+   fact2 = fact2 + cmplx(rm(a),-pm(a))*cmplx(rn(a),pn(a))
 end do
 fact2 = coeff*fact2
 
 fact3 = 0d0
 do a = ng+nb+1, nmap
-   fact3 = fact3 + (rm(a)**2 + pm(a)**2 - 1d0)
+   fact3 = fact3 + cmplx(rm(a),-pm(a))*cmplx(rn(a),pn(a))
 end do
 fact3 = coeff*fact3
 end subroutine get_facts_pop

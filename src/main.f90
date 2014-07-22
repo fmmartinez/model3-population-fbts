@@ -6,13 +6,16 @@ implicit none
 character(len=2) :: c_nb,c_nt
 character(len=9) :: fmt1,fmt2
 
+complex(8) :: coeff,fact1,fact2,fact3
+complex(8),dimension(:),allocatable :: pop,pop1,pop2,pop3
+
 integer :: a,b,i,j,ng,nb,nd,basispc,nmap,cont
 integer :: np,nosc,nmcs,nmds,seed_dimension,bath,init,mcs,it,is,ib
 !integer,dimension(:),allocatable :: seed
 
 real(8) :: delta,ome_max,dt,lumda_d,eg,eb,ed,mu,e0,beta,time_j,taw_j,omega_j,check,vomega
-real(8) :: dt2,uj,qbeta,coeff,lambdacheck,a1,a2,et,fact1,fact2,fact3,gaussian,etotal,tn
-real(8),dimension(:),allocatable :: ome,c2,kosc,pop,pop1,pop2,pop3,x,p,fx,rm,pm,facn,popt
+real(8) :: dt2,uj,qbeta,lambdacheck,a1,a2,et,gaussian,etotal,tn
+real(8),dimension(:),allocatable :: ome,c2,kosc,x,p,fx,rm,pm,rn,pn,facn,popt
 real(8),dimension(:,:),allocatable :: hm,lambda,popn,ug,ub,ud,hc
 real(8),dimension(:,:),allocatable :: sgg,sgb,sgd,sbg,sbb,sbd,sdg,sdb,sdd,hs,lld
 real(8),dimension(:,:),allocatable :: llg,llb,llgb,llbg,lldb,llbd
@@ -25,6 +28,7 @@ nmap = ng + nb + nd
 
 allocate(ome(1:nosc),c2(1:nosc),kosc(1:nosc))
 allocate(rm(1:nmap),pm(1:nmap))
+allocate(rn(1:nmap),pn(1:nmap))
 allocate(sgg(1:ng,1:ng),sgb(1:ng,1:nb),sgd(1:ng,1:nd))
 allocate(sbg(1:nb,1:ng),sbb(1:nb,1:nb),sbd(1:nb,1:nd))
 allocate(sdg(1:nd,1:ng),sdb(1:nd,1:nb),sdd(1:nd,1:nd))
@@ -88,16 +92,20 @@ MC: do mcs = 1, nmcs
    if (init == 3) then
       do i = 1, nmap
          rm(i) = gauss_noise2()/sqrt(2d0)
+         rn(i) = gauss_noise2()/sqrt(2d0)
          pm(i) = gauss_noise2()/sqrt(2d0)
+         pn(i) = gauss_noise2()/sqrt(2d0)
       end do
    else
       rm = 0d0
+      rn = 0d0
       pm = 0d0
+      pn = 0d0
    end if
-   
-   call get_coeff(ng,beta,vomega,rm,pm,coeff)
+  
+   call get_coeff(ng,beta,vomega,rm,pm,rn,pn,coeff)
 
-   call get_force_traceless(nmap,ng,nb,lld,kosc,x,c2,rm,pm,fx)
+   call get_force_fb(nmap,ng,nb,lld,kosc,x,c2,rm,pm,rn,pn,fx)
 
    ib = 1
 
@@ -107,7 +115,7 @@ MC: do mcs = 1, nmcs
 !      popt(ib)   = popt(ib) + facn(i)
 !   end do
 
-   call get_facts_pop(nmap,ng,nb,coeff,rm,pm,fact1,fact2,fact3)
+   call get_facts_pop(nmap,ng,nb,coeff,rm,pm,rn,pn,fact1,fact2,fact3)
 
    pop(ib)  = pop(ib)  + (fact1+fact2+fact3)
    pop1(ib) = pop1(ib) + (fact1)
@@ -133,13 +141,14 @@ MC: do mcs = 1, nmcs
       
 !      call get_hm(nmap,ng,nb,lmd,basispc,delta,mu,et,a1,a2,kg,kb,kd,vg,vb,vd,hm)
       call get_hm2(nmap,ng,nb,mu,et,a1,a2,hs,hm)
-      call make_hm_traceless(nmap,hm,tn)
+      !call make_hm_traceless(nmap,hm,tn)
 !if (it == 500) then
 !write(*,*) 'mapping hamiltonian'
 !write(*,fmt2) hm
 !stop
 !end if
       call evolve_pm(nmap,dt2,hm,rm,pm)
+      call evolve_pm(nmap,dt2,hm,rn,pn)
 
       do is = 1, nosc
          x(is) = x(is) + dt*p(is)
@@ -153,13 +162,15 @@ MC: do mcs = 1, nmcs
 !      call update_hm(nmap,ng,nb,lmd,basispc,delta,mu,et,a1,a2,kg,kb,kd,vg,vb,vd,hm)
 !      call update_hm2(nmap,ng,nb,delta,mu,et,a1,a2,hc,hm)
       call get_hm2(nmap,ng,nb,mu,et,a1,a2,hs,hm)
-      call make_hm_traceless(nmap,hm,tn)
+      !call make_hm_traceless(nmap,hm,tn)
 
       call evolve_rm(nmap,dt,hm,pm,rm)
+      call evolve_rm(nmap,dt,hm,pn,rn)
 
       call evolve_pm(nmap,dt2,hm,rm,pm)
+      call evolve_pm(nmap,dt2,hm,rn,pn)
 
-      call get_force_traceless(nmap,ng,nb,lld,kosc,x,c2,rm,pm,fx)
+      call get_force_fb(nmap,ng,nb,lld,kosc,x,c2,rm,pm,rn,pn,fx)
       
       do is = 1, nosc
          p(is) = p(is) + dt2*fx(is)
@@ -173,7 +184,7 @@ MC: do mcs = 1, nmcs
 !         popt(ib)   = popt(ib) + facn(i)
 !      end do
 
-      call get_facts_pop(nmap,ng,nb,coeff,rm,pm,fact1,fact2,fact3)
+      call get_facts_pop(nmap,ng,nb,coeff,rm,pm,rn,pn,fact1,fact2,fact3)
       
       pop(ib)  = pop(ib)  + (fact1+fact2+fact3)
       pop1(ib) = pop1(ib) + (fact1)
@@ -213,7 +224,7 @@ MC: do mcs = 1, nmcs
 !      end do
 
       do i = 1, nmds+1
-         write(444,'(i10,4f20.9)') i-1,pop1(i)/pop(i),pop2(i)/pop(i),pop3(i)/pop(i),pop(i)
+         write(444,'(i10,4f20.9)') i-1,dble(pop1(i)/pop(i)),dble(pop2(i)/pop(i)),dble(pop3(i)/pop(i)),dble(pop(i))
       end do
       close(444)
 
@@ -224,7 +235,7 @@ do ib = 1, nmds+1
    pop1(ib) = pop1(ib)/pop(ib)
    pop2(ib) = pop2(ib)/pop(ib)
    pop3(ib) = pop3(ib)/pop(ib)
-   write(333,'(i10,4f20.9)') ib-1, pop1(ib),pop2(ib),pop3(ib),pop(ib)!/dnmcs
+   write(333,'(i10,4f20.9)') ib-1, dble(pop1(ib)),dble(pop2(ib)),dble(pop3(ib)),dble(pop(ib))!/dnmcs
 end do
 
 deallocate(ome,c2,kosc)
