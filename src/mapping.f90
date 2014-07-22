@@ -41,8 +41,7 @@ do j = 1, n
 
    do a = 1, nmap
       do b = 1, nmap
-            f(j) = f(j) - 0.5d0*dh(a,b)*(rm(a)*rm(b) + pm(a)*pm(b) + rn(a)*rn(b) + pn(a)*pn(b))
-         end if
+         f(j) = f(j) - 0.5d0*dh(a,b)*(rm(a)*rm(b) + pm(a)*pm(b) + rn(a)*rn(b) + pn(a)*pn(b))
       end do
    end do
 end do

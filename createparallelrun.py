@@ -40,9 +40,9 @@ omega = 260
 vibomega = 37.7
 
 #basis functions used
-g = 5  
-b = 5  
-d = 5  
+g = 1  
+b = 1  
+d = 1  
 
 #delta
 delta = 1
