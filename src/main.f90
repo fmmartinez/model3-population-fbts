@@ -15,7 +15,7 @@ integer :: np,nosc,nmcs,nmds,seed_dimension,bath,init,mcs,it,is,ib
 
 real(8) :: delta,ome_max,dt,lumda_d,eg,eb,ed,mu,e0,beta,time_j,taw_j,omega_j,check,vomega
 real(8) :: dt2,uj,qbeta,lambdacheck,a1,a2,et,gaussian,etotal,tn
-real(8),dimension(:),allocatable :: ome,c2,kosc,x,p,fx,rm,pm,facn,popt
+real(8),dimension(:),allocatable :: ome,c2,kosc,x,p,fx,rm,pm,rn,pn,facn,popt
 real(8),dimension(:,:),allocatable :: hm,lambda,popn,ug,ub,ud,hc
 real(8),dimension(:,:),allocatable :: sgg,sgb,sgd,sbg,sbb,sbd,sdg,sdb,sdd,hs,lld
 real(8),dimension(:,:),allocatable :: llg,llb,llgb,llbg,lldb,llbd
@@ -91,7 +91,9 @@ MC: do mcs = 1, nmcs
    if (init == 3) then
       do i = 1, nmap
          rm(i) = gauss_noise2()/sqrt(2d0)
+         rn(i) = gauss_noise2()/sqrt(2d0)
          pm(i) = gauss_noise2()/sqrt(2d0)
+         pn(i) = gauss_noise2()/sqrt(2d0)
       end do
    else
       rm = 0d0
