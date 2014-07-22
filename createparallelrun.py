@@ -6,8 +6,8 @@ import shutil
 
 #modules to load for execution in certain clusters, leave blank if none
 #following is used for jasper
-#module = 'compiler/intel/13.0.1'
-module = ''
+module = 'compiler/intel/13.0.1'
+#module = ''
 
 #TORQUE will use the following email to inform details about your jobs
 email = 'fmmartin@ualberta.ca'

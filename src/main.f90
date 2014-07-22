@@ -224,7 +224,7 @@ MC: do mcs = 1, nmcs
 !      end do
 
       do i = 1, nmds+1
-         write(444,'(i10,4f20.9)') i-1,pop1(i)/pop(i),pop2(i)/pop(i),pop3(i)/pop(i),pop(i)
+         write(444,'(i10,4f20.9)') i-1,dble(pop1(i)/pop(i)),dble(pop2(i)/pop(i)),dble(pop3(i)/pop(i)),dble(pop(i))
       end do
       close(444)
 
@@ -235,7 +235,7 @@ do ib = 1, nmds+1
    pop1(ib) = pop1(ib)/pop(ib)
    pop2(ib) = pop2(ib)/pop(ib)
    pop3(ib) = pop3(ib)/pop(ib)
-   write(333,'(i10,4f20.9)') ib-1, pop1(ib),pop2(ib),pop3(ib),pop(ib)!/dnmcs
+   write(333,'(i10,4f20.9)') ib-1, dble(pop1(ib)),dble(pop2(ib)),dble(pop3(ib)),dble(pop(ib))!/dnmcs
 end do
 
 deallocate(ome,c2,kosc)
