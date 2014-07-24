@@ -73,6 +73,7 @@ dt2 = 0.5d0*dt
 
 call get_preh(ng,nb,nd,eg,eb,ed,delta,vomega,hs)
 
+lld = 0d0
 do i = ng+nb+1, nmap
    lld(i,i) = 1d0
 end do

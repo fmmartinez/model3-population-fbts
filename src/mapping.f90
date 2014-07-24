@@ -37,7 +37,7 @@ do j = 1, n
 
    tn = trace/nmap
    
-   f(j) = f(j) - tn
+   f(j) = f(j) + tn
 
    do a = 1, nmap
       do b = 1, nmap
