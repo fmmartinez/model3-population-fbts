@@ -83,7 +83,7 @@ if nproc > 9:
 else:
 	cpus = '00' + str(nproc)
 
-gendirname = 'p' + gpart + bpart + dpart + '-' + cpus + '/'
+gendirname = 'p' + gpart + bpart + dpart + '-' + cpus + '-d' + str(delta) + '/'
 
 #genenrate global folder
 if not(os.path.exists(gendirname)):
@@ -170,7 +170,7 @@ m.append('time ./a.out < md.in\n')
 for i in range(0,nproc):
 	pbsfile = open('./' + dirs[i] + '/submit_cluster.pbs','w')
 	
-	m[2] = '#PBS -N p' + str(g) + str(b) + str(d) + '-' + str(i) + '\n'
+	m[2] = '#PBS -N p' + str(g) + str(b) + str(d) + 'd' + str(delta) + '-' + str(i) + '\n'
 	
 	if ((i == 0)|(i == nproc-1)):
 		m[6] = '#PBS -m bea\n'
