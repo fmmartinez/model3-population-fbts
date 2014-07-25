@@ -48,6 +48,52 @@ end do
 
 end subroutine get_force_fb
 
+subroutine get_force_fb_traceless(nmap,ng,nb,lld,kosc,x,c2,rm,pm,rn,pn,f)
+implicit none
+
+real(8),dimension(:),intent(in) :: rm,pm,rn,pn,x
+real(8),dimension(:),intent(out) :: f
+
+integer :: a,b,i,j,n
+integer,intent(in) :: nmap,ng,nb
+
+real(8) :: trace,tn
+real(8),dimension(:),intent(in) :: kosc,c2
+real(8),dimension(:,:),intent(in) :: lld
+real(8),dimension(:,:),allocatable :: dh
+
+allocate(dh(1:nmap,1:nmap))
+
+n = size(x)
+
+f = 0d0
+do j = 1, n
+   f(j) = -kosc(j)*x(j)
+   
+   dh = (lld)*c2(j)
+   
+   trace = 0d0
+   do a = 1, nmap
+      trace = trace + dh(a,a)
+   end do
+
+   tn = trace/nmap
+   
+   f(j) = f(j) - tn
+
+   do a = 1, nmap
+      do b = 1, nmap
+         if (a == b) then
+            f(j) = f(j) - 0.5d0*(dh(a,b)-tn)*(rm(a)*rm(b) + pm(a)*pm(b) + rn(a)*rn(b) + pn(a)*pn(b))
+         else
+            f(j) = f(j) - 0.5d0*dh(a,b)*(rm(a)*rm(b) + pm(a)*pm(b) + rn(a)*rn(b) + pn(a)*pn(b))
+         end if
+      end do
+   end do
+end do
+
+end subroutine get_force_fb_traceless
+
 subroutine get_force_traceless(nmap,ng,nb,lld,kosc,x,c2,rm,pm,f)
 implicit none
 
