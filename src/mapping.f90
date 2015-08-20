@@ -129,7 +129,7 @@ integer :: i,j,n
 integer,intent(in) :: nmap
 
 real(8),intent(out) :: etotal
-real(8),dimension(:),intent(in) :: x,p,kosc,rm,pm
+real(8),dimension(:),intent(in) :: x,p,kosc,rm,pm,rn,pn
 real(8),dimension(:,:),intent(in) :: hm
 
 n = size(x)
