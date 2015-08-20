@@ -1,5 +1,4 @@
 module m_map
-use ifport
 implicit none
 
 real(8),parameter :: pi=3.1415926535d0
@@ -714,20 +713,5 @@ end do
 write(6,*) check
 
 end subroutine iniconq_d
-
-function gauss_noise2() result(g)
-implicit none
-
-real(8),parameter :: pi2=2.0*3.141592654
-
-real(8) :: g,z1,z2
-
-!call random_number(z1)
-!call random_number(z2)
-z1 = rand()
-z2 = rand()
-g = sqrt(-2.d0*log(z1))*cos(pi2*z2)
-
-end function gauss_noise2
 
 end module m_map

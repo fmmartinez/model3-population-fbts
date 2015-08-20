@@ -13,7 +13,7 @@ complex(8) :: coeff,fact1,fact2,fact3
 complex(8),dimension(:),allocatable :: pop,pop1,pop2,pop3
 
 integer :: i,ng,nb,nd,nmap
-integer :: np,nosc,nmcs,nmds,seedx,bath,init,mcs,it,is,ib
+integer :: np,nosc,nmcs,nmds,seed,bath,init,mcs,it,is,ib
 integer :: brng,errcode,method
 
 real(8) :: delta,ome_max,dt,lumda_d,eg,eb,ed,mu,e0,beta,time_j,taw_j,omega_j,vomega
@@ -33,7 +33,7 @@ brng = VSL_BRNG_MT2203
 !box muller implementation for generating gaussian distribution random numbers
 method = VSL_RNG_METHOD_GAUSSIAN_BOXMULLER 
 !getting stream
-errcode = vslnewstream(stream,brng,seedx)
+errcode = vslnewstream(stream,brng,seed)
 
 allocate(ome(1:nosc),c2(1:nosc),kosc(1:nosc))
 allocate(rm(1:nmap),pm(1:nmap))
@@ -267,7 +267,7 @@ open (666,file='md.in')
 read(666,*)
 read(666,*) np,delta,nosc,ome_max
 read(666,*)
-read(666,*) nmcs,nmds,seedx,dt,lumda_d
+read(666,*) nmcs,nmds,seed,dt,lumda_d
 read(666,*)
 read(666,*) eg,eb,ed,mu,e0,beta,vomega
 read(666,*)
