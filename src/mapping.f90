@@ -122,7 +122,7 @@ tn = trace
 
 end subroutine make_hm_traceless
 
-subroutine get_totalenergy(nmap,hm,pm,rm,x,p,kosc,etotal)
+subroutine get_totalenergy_fb(nmap,hm,pm,rm,pn,rn,x,p,kosc,etotal)
 implicit none
 
 integer :: i,j,n
@@ -139,46 +139,46 @@ etotal = 0d0
 do i = 1, n
    etotal = etotal + 0.5d0*(p(i)**2 + kosc(i)*x(i)**2)
 end do
-!mapping part
+!trace stuff
+do i = 1, nmap
+   etotal = etotal - hm(i,i)
+end do
+!quantum part
 do i = 1, nmap
    do j = 1, nmap
-      if (i == j) then
-         etotal = etotal + 0.5d0*(hm(i,j)*(pm(i)*pm(j) + rm(i)*rm(j) - 1d0))
-      else
-         etotal = etotal + 0.5d0*(hm(i,j)*(pm(i)*pm(j) + rm(i)*rm(j)))
-      end if
+      etotal = etotal + 0.25d0*hm(i,j)*((pm(i)*pm(j) + rm(i)*rm(j)) + (pn(i)*pn(j) + rn(i)*rn(j)))
    end do
 end do
 
 end subroutine get_totalenergy
 
-subroutine get_totalenergy_traceless(nmap,hm,tn,pm,rm,x,p,kosc,etotal)
-implicit none
-
-integer :: i,j,n
-integer,intent(in) :: nmap
-
-real(8),intent(in) :: tn
-real(8),intent(out) :: etotal
-real(8),dimension(:),intent(in) :: x,p,kosc,rm,pm
-real(8),dimension(:,:),intent(in) :: hm
-
-n = size(x)
-
-etotal = 0d0
-!classical part
-do i = 1, n
-   etotal = etotal + 0.5d0*(p(i)**2 + kosc(i)*x(i)**2)
-end do
-!mapping part
-etotal = etotal + tn
-do i = 1, nmap
-   do j = 1, nmap
-      etotal = etotal + 0.5d0*(hm(i,j)*(pm(i)*pm(j) + rm(i)*rm(j)))
-   end do
-end do
-
-end subroutine get_totalenergy_traceless
+!subroutine get_totalenergy_traceless(nmap,hm,tn,pm,rm,x,p,kosc,etotal)
+!implicit none
+!
+!integer :: i,j,n
+!integer,intent(in) :: nmap
+!
+!real(8),intent(in) :: tn
+!real(8),intent(out) :: etotal
+!real(8),dimension(:),intent(in) :: x,p,kosc,rm,pm
+!real(8),dimension(:,:),intent(in) :: hm
+!
+!n = size(x)
+!
+!etotal = 0d0
+!!classical part
+!do i = 1, n
+!   etotal = etotal + 0.5d0*(p(i)**2 + kosc(i)*x(i)**2)
+!end do
+!!mapping part
+!etotal = etotal + tn
+!do i = 1, nmap
+!   do j = 1, nmap
+!      etotal = etotal + 0.5d0*(hm(i,j)*(pm(i)*pm(j) + rm(i)*rm(j)))
+!   end do
+!end do
+!
+!end subroutine get_totalenergy_traceless
 
 subroutine get_coeff_fb(ng,beta,omega,rm,pm,rn,pn,coeff)
 implicit none

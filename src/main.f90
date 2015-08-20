@@ -199,10 +199,10 @@ MC: do mcs = 1, nmcs
       pop2(ib) = pop2(ib) + (fact2)
       pop3(ib) = pop3(ib) + (fact3)
       
-      !if (mod(mcs,1000) == 0) then
-      !   call get_totalenergy_traceless(nmap,hm,tn,pm,rm,x,p,kosc,etotal)
-      !   write(747,*) it, etotal
-      !end if
+      if (mod(mcs,1000) == 0) then
+         call get_totalenergy_fb(nmap,hm,tn,pm,rm,pn,rn,x,p,kosc,etotal)
+         write(747,*) it, etotal
+      end if
    
       if ((pop(ib) /= pop(ib)).or.(pop(ib)-1 == pop(ib))) then
          print *, 'there is overflow in', it, mcs
