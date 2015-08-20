@@ -150,7 +150,7 @@ do i = 1, nmap
    end do
 end do
 
-end subroutine get_totalenergy
+end subroutine get_totalenergy_fb
 
 !subroutine get_totalenergy_traceless(nmap,hm,tn,pm,rm,x,p,kosc,etotal)
 !implicit none
