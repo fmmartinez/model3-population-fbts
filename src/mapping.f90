@@ -8,6 +8,7 @@ contains
 subroutine get_force_fb(nmap,ng,nb,lld,kosc,x,c2,rm,pm,rn,pn,f)
 implicit none
 
+real(8),dimension(:),allocatable :: c
 real(8),dimension(:),intent(in) :: rm,pm,rn,pn,x
 real(8),dimension(:),intent(out) :: f
 
@@ -17,81 +18,83 @@ integer,intent(in) :: nmap,ng,nb
 real(8) :: trace,tn
 real(8),dimension(:),intent(in) :: kosc,c2
 real(8),dimension(:,:),intent(in) :: lld
-real(8),dimension(:,:),allocatable :: dh
+real(8),dimension(:,:),allocatable :: mdh
 
-allocate(dh(1:nmap,1:nmap))
+allocate(mdh(1:nmap,1:nmap))
+allocate(c(1:nmap))
 
 n = size(x)
 
 f = 0d0
+!getting product for faster calculation
+do a = 1, nmap
+   c(a) = 0.25d0*(rm(a)**2 + pm(a)**2 + rn(a)**2 + pn(a)**2)
+end do
+
 do j = 1, n
    f(j) = -kosc(j)*x(j)
    
-   dh = (lld)*c2(j)
+   mdh = (lld)*(-2d0*c2(j))
    
    trace = 0d0
    do a = 1, nmap
-      trace = trace + dh(a,a)
+      trace = trace + mdh(a,a)
    end do
-
-   tn = trace/nmap
-   
-   f(j) = f(j) + tn
 
    do a = 1, nmap
-      do b = 1, nmap
-         f(j) = f(j) - 0.5d0*dh(a,b)*(rm(a)*rm(b) + pm(a)*pm(b) + rn(a)*rn(b) + pn(a)*pn(b))
-      end do
+      f(j) = f(j) + mdh(a,a)*c(a)
    end do
+
+   f(j) = f(j) + trace
 end do
 
 end subroutine get_force_fb
 
-subroutine get_force_traceless(nmap,ng,nb,lld,kosc,x,c2,rm,pm,f)
-implicit none
-
-real(8),dimension(:),intent(in) :: rm,pm,x
-real(8),dimension(:),intent(out) :: f
-
-integer :: a,b,i,j,n
-integer,intent(in) :: nmap,ng,nb
-
-real(8) :: trace,tn
-real(8),dimension(:),intent(in) :: kosc,c2
-real(8),dimension(:,:),intent(in) :: lld
-real(8),dimension(:,:),allocatable :: dh
-
-allocate(dh(1:nmap,1:nmap))
-
-n = size(x)
-
-f = 0d0
-do j = 1, n
-   f(j) = -kosc(j)*x(j)
-   
-   dh = (lld)*c2(j)
-   
-   trace = 0d0
-   do a = 1, nmap
-      trace = trace + dh(a,a)
-   end do
-
-   tn = trace/nmap
-   
-   f(j) = f(j) + tn
-
-   do a = 1, nmap
-      do b = 1, nmap
-         if (a == b) then
-            f(j) = f(j) - (dh(a,b) - tn)*(rm(a)*rm(b) + pm(a)*pm(b))
-         else
-            f(j) = f(j) - dh(a,b)*(rm(a)*rm(b) + pm(a)*pm(b))
-         end if
-      end do
-   end do
-end do
-
-end subroutine get_force_traceless
+!subroutine get_force_traceless(nmap,ng,nb,lld,kosc,x,c2,rm,pm,f)
+!implicit none
+!
+!real(8),dimension(:),intent(in) :: rm,pm,x
+!real(8),dimension(:),intent(out) :: f
+!
+!integer :: a,b,i,j,n
+!integer,intent(in) :: nmap,ng,nb
+!
+!real(8) :: trace,tn
+!real(8),dimension(:),intent(in) :: kosc,c2
+!real(8),dimension(:,:),intent(in) :: lld
+!real(8),dimension(:,:),allocatable :: dh
+!
+!allocate(dh(1:nmap,1:nmap))
+!
+!n = size(x)
+!
+!f = 0d0
+!do j = 1, n
+!   f(j) = -kosc(j)*x(j)
+!   
+!   dh = (lld)*c2(j)
+!   
+!   trace = 0d0
+!   do a = 1, nmap
+!      trace = trace + dh(a,a)
+!   end do
+!
+!   tn = trace/nmap
+!   
+!   f(j) = f(j) + tn
+!
+!   do a = 1, nmap
+!      do b = 1, nmap
+!         if (a == b) then
+!            f(j) = f(j) - (dh(a,b) - tn)*(rm(a)*rm(b) + pm(a)*pm(b))
+!         else
+!            f(j) = f(j) - dh(a,b)*(rm(a)*rm(b) + pm(a)*pm(b))
+!         end if
+!      end do
+!   end do
+!end do
+!
+!end subroutine get_force_traceless
 
 subroutine make_hm_traceless(nmap,hm,tn)
 implicit none
