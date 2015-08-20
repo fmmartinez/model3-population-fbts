@@ -12,16 +12,15 @@ character(len=9) :: fmt1,fmt2
 complex(8) :: coeff,fact1,fact2,fact3
 complex(8),dimension(:),allocatable :: pop,pop1,pop2,pop3
 
-integer :: a,b,i,j,ng,nb,nd,basispc,nmap,cont
+integer :: i,ng,nb,nd,nmap
 integer :: np,nosc,nmcs,nmds,seedx,bath,init,mcs,it,is,ib
 integer :: brng,errcode,method
 
-real(8) :: delta,ome_max,dt,lumda_d,eg,eb,ed,mu,e0,beta,time_j,taw_j,omega_j,check,vomega
-real(8) :: dt2,uj,qbeta,lambdacheck,a1,a2,et,gaussian,etotal,tn
+real(8) :: delta,ome_max,dt,lumda_d,eg,eb,ed,mu,e0,beta,time_j,taw_j,omega_j,vomega
+real(8) :: dt2,uj,qbeta,a1,a2,et,gaussian,etotal,tn
 real(8),dimension(:),allocatable :: ome,c2,kosc,x,p,fx,rm,pm,rn,pn,facn,popt
-real(8),dimension(:,:),allocatable :: hm,lambda,popn,ug,ub,ud,hc
-real(8),dimension(:,:),allocatable :: sgg,sgb,sgd,sbg,sbb,sbd,sdg,sdb,sdd,hs,lld
-real(8),dimension(:,:),allocatable :: llg,llb,llgb,llbg,lldb,llbd
+real(8),dimension(:,:),allocatable :: hm,popn
+real(8),dimension(:,:),allocatable :: hs,lld
 
 type(vsl_stream_state) :: stream
 
@@ -39,18 +38,12 @@ errcode = vslnewstream(stream,brng,seedx)
 allocate(ome(1:nosc),c2(1:nosc),kosc(1:nosc))
 allocate(rm(1:nmap),pm(1:nmap))
 allocate(rn(1:nmap),pn(1:nmap))
-allocate(sgg(1:ng,1:ng),sgb(1:ng,1:nb),sgd(1:ng,1:nd))
-allocate(sbg(1:nb,1:ng),sbb(1:nb,1:nb),sbd(1:nb,1:nd))
-allocate(sdg(1:nd,1:ng),sdb(1:nd,1:nb),sdd(1:nd,1:nd))
-allocate(hm(1:nmap,1:nmap),hc(1:nmap,1:nmap),hs(1:nmap,1:nmap))
-allocate(ug(1:nmap,1:nmap),ub(1:nmap,1:nmap),ud(1:nmap,1:nmap))
-allocate(lambda(1:nmap,1:nmap),llg(1:nmap,1:nmap),llb(1:nmap,1:nmap),lld(1:nmap,1:nmap))
-allocate(llgb(1:nmap,1:nmap),llbg(1:nmap,1:nmap))
-allocate(llbd(1:nmap,1:nmap),lldb(1:nmap,1:nmap))
+allocate(hm(1:nmap,1:nmap),hs(1:nmap,1:nmap))
+allocate(lld(1:nmap,1:nmap))
 
 call iniconq_d(nosc,lumda_d,ome_max,ome,c2,kosc)
 
-allocate(popn(1:nmds+1,1:nmap),facn(1:nmap),popt(1:nmds+1))
+!allocate(popn(1:nmds+1,1:nmap),facn(1:nmap),popt(1:nmds+1))
 allocate(pop(1:nmds+1),pop1(1:nmds+1),pop2(1:nmds+1),pop3(1:nmds+1))
 allocate(x(1:nosc),p(1:nosc),fx(1:nosc))
 
@@ -253,11 +246,15 @@ do ib = 1, nmds+1
    write(333,'(i10,4f20.9)') ib-1, dble(pop1(ib)),dble(pop2(ib)),dble(pop3(ib)),dble(pop(ib))!/dnmcs
 end do
 
+!Memory deallocations
 errcode = vsldeletestream(stream)
 
 deallocate(ome,c2,kosc)
 deallocate(pop,pop1,pop2,pop3)
-deallocate(x,p)
+deallocate(x,p,fx)
+deallocate(rm,pm,rn,pn)
+deallocate(hm,hs,lld)
+
 
 contains
 
