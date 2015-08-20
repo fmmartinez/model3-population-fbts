@@ -203,6 +203,10 @@ MC: do mcs = 1, nmcs
       !   call get_totalenergy_traceless(nmap,hm,tn,pm,rm,x,p,kosc,etotal)
       !   write(747,*) it, etotal
       !end if
+   
+      if ((pop(ib) /= pop(ib)).or.(pop(ib)-1 == pop(ib))) then
+         print *, 'there is overflow in', it, mcs
+      end if   
    end do MD
 
    close(747)
