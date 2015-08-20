@@ -144,7 +144,7 @@ l.append(str(g) + '\t' + str(b)+ '\t' + str(d) + '\r\n')
 for i in range(0,nproc):
 	mdfile = open('./' + dirs[i] + '/md.in','w')
 	
-	seed = i*9 + 5
+	seed = i
 
 	l[3] = str(tpp) + '\t4000\t' + str(seed) + '\t' + timestep + '\t10d0\r\n'
 
