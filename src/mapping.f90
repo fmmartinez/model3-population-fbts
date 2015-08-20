@@ -177,7 +177,7 @@ end do
 
 end subroutine get_totalenergy_traceless
 
-subroutine get_coeff(ng,beta,omega,rm,pm,rn,pn,coeff)
+subroutine get_coeff_fb(ng,beta,omega,rm,pm,rn,pn,coeff)
 implicit none
 
 complex(8),intent(out) :: coeff
@@ -212,7 +212,7 @@ end do
 
 deallocate(exp_be)
 deallocate(prob)
-end subroutine get_coeff
+end subroutine get_coeff_fb
 
 subroutine evolve_rm(nmap,dt,hm,pm,rm)
 implicit none
@@ -252,68 +252,68 @@ end do
 
 end subroutine evolve_pm
 
-subroutine get_facts_pop_traceless(nmap,coeff,llg,llb,lld,rm,pm,fact1,fact2,fact3)
-implicit none
+!subroutine get_facts_pop_traceless(nmap,coeff,llg,llb,lld,rm,pm,fact1,fact2,fact3)
+!implicit none
+!
+!integer :: a,b,i
+!integer,intent(in) :: nmap
+!
+!real(8) :: trt
+!real(8),intent(in) :: coeff
+!real(8),intent(out) :: fact1,fact2,fact3
+!real(8),dimension(:),intent(in) :: rm,pm
+!real(8),dimension(:,:),intent(in) :: llg,llb,lld
+!
+!trt = 0d0
+!do i = 1, nmap
+!   trt = trt + llg(i,i)
+!end do
+!fact1 = trt/nmap
+!do a = 1, nmap
+!   do b = 1, nmap
+!      if (a == b) then
+!         fact1 = fact1 + 0.5d0*(llg(a,b) - trt/nmap)*(rm(a)*rm(b) + pm(a)*pm(b))
+!      else
+!         fact1 = fact1 + 0.5d0*(llg(a,b))*(rm(a)*rm(b) + pm(a)*pm(b))
+!      end if
+!   end do
+!end do
+!fact1 = coeff*fact1
+!
+!trt = 0d0
+!do i = 1, nmap
+!   trt = trt + llb(i,i)
+!end do
+!fact2 = trt/nmap
+!do a = 1, nmap
+!   do b = 1, nmap
+!      if (a == b) then
+!         fact2 = fact2 + 0.5d0*(llb(a,b) - trt/nmap)*(rm(a)*rm(b) + pm(a)*pm(b))
+!      else
+!         fact2 = fact2 + 0.5d0*llb(a,b)*(rm(a)*rm(b) + pm(a)*pm(b))
+!      end if
+!   end do
+!end do
+!fact2 = coeff*fact2
+!
+!trt = 0d0
+!do i = 1, nmap
+!   trt = trt + lld(i,i)
+!end do
+!fact3 = trt/nmap
+!do a = 1, nmap
+!   do b = 1, nmap
+!      if (a == b) then
+!         fact3 = fact3 + 0.5d0*(lld(a,b) - trt/nmap)*(rm(a)*rm(b) + pm(a)*pm(b))
+!      else
+!         fact3 = fact3 + 0.5d0*lld(a,b)*(rm(a)*rm(b) + pm(a)*pm(b))
+!      end if
+!   end do
+!end do
+!fact3 = coeff*fact3
+!end subroutine get_facts_pop_traceless
 
-integer :: a,b,i
-integer,intent(in) :: nmap
-
-real(8) :: trt
-real(8),intent(in) :: coeff
-real(8),intent(out) :: fact1,fact2,fact3
-real(8),dimension(:),intent(in) :: rm,pm
-real(8),dimension(:,:),intent(in) :: llg,llb,lld
-
-trt = 0d0
-do i = 1, nmap
-   trt = trt + llg(i,i)
-end do
-fact1 = trt/nmap
-do a = 1, nmap
-   do b = 1, nmap
-      if (a == b) then
-         fact1 = fact1 + 0.5d0*(llg(a,b) - trt/nmap)*(rm(a)*rm(b) + pm(a)*pm(b))
-      else
-         fact1 = fact1 + 0.5d0*(llg(a,b))*(rm(a)*rm(b) + pm(a)*pm(b))
-      end if
-   end do
-end do
-fact1 = coeff*fact1
-
-trt = 0d0
-do i = 1, nmap
-   trt = trt + llb(i,i)
-end do
-fact2 = trt/nmap
-do a = 1, nmap
-   do b = 1, nmap
-      if (a == b) then
-         fact2 = fact2 + 0.5d0*(llb(a,b) - trt/nmap)*(rm(a)*rm(b) + pm(a)*pm(b))
-      else
-         fact2 = fact2 + 0.5d0*llb(a,b)*(rm(a)*rm(b) + pm(a)*pm(b))
-      end if
-   end do
-end do
-fact2 = coeff*fact2
-
-trt = 0d0
-do i = 1, nmap
-   trt = trt + lld(i,i)
-end do
-fact3 = trt/nmap
-do a = 1, nmap
-   do b = 1, nmap
-      if (a == b) then
-         fact3 = fact3 + 0.5d0*(lld(a,b) - trt/nmap)*(rm(a)*rm(b) + pm(a)*pm(b))
-      else
-         fact3 = fact3 + 0.5d0*lld(a,b)*(rm(a)*rm(b) + pm(a)*pm(b))
-      end if
-   end do
-end do
-fact3 = coeff*fact3
-end subroutine get_facts_pop_traceless
-
-subroutine get_facts_pop(nmap,ng,nb,coeff,rm,pm,rn,pn,fact1,fact2,fact3)
+subroutine get_facts_pop_fb(nmap,ng,nb,coeff,rm,pm,rn,pn,fact1,fact2,fact3)
 implicit none
 
 complex(8),intent(in) :: coeff
@@ -341,7 +341,7 @@ do a = ng+nb+1, nmap
    fact3 = fact3 + cmplx(rm(a),-pm(a))*cmplx(rn(a),pn(a))
 end do
 fact3 = coeff*fact3
-end subroutine get_facts_pop
+end subroutine get_facts_pop_fb
 
 function kronecker_delta(i,j) result (d)
 implicit none

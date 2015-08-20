@@ -111,7 +111,7 @@ MC: do mcs = 1, nmcs
       pn = 0d0
    end if
   
-   call get_coeff(ng,beta,vomega,rm,pm,rn,pn,coeff)
+   call get_coeff_fb(ng,beta,vomega,rm,pm,rn,pn,coeff)
 
    call get_force_fb(nmap,ng,nb,lld,kosc,x,c2,rm,pm,rn,pn,fx)
 
@@ -123,7 +123,7 @@ MC: do mcs = 1, nmcs
 !      popt(ib)   = popt(ib) + facn(i)
 !   end do
 
-   call get_facts_pop(nmap,ng,nb,coeff,rm,pm,rn,pn,fact1,fact2,fact3)
+   call get_facts_pop_fb(nmap,ng,nb,coeff,rm,pm,rn,pn,fact1,fact2,fact3)
 
    pop(ib)  = pop(ib)  + (fact1+fact2+fact3)
    pop1(ib) = pop1(ib) + (fact1)
@@ -192,7 +192,7 @@ MC: do mcs = 1, nmcs
 !         popt(ib)   = popt(ib) + facn(i)
 !      end do
 
-      call get_facts_pop(nmap,ng,nb,coeff,rm,pm,rn,pn,fact1,fact2,fact3)
+      call get_facts_pop_fb(nmap,ng,nb,coeff,rm,pm,rn,pn,fact1,fact2,fact3)
       
       pop(ib)  = pop(ib)  + (fact1+fact2+fact3)
       pop1(ib) = pop1(ib) + (fact1)
