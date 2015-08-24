@@ -17,8 +17,9 @@ integer :: np,nosc,nmcs,nmds,seed,bath,init,mcs,it,is,ib
 integer :: brng,errcode,method
 
 real(8) :: delta,ome_max,dt,lumda_d,eg,eb,ed,mu,e0,beta,time_j,taw_j,omega_j,vomega
-real(8) :: dt2,uj,qbeta,a1,a2,et,gaussian,etotal,tn
+real(8) :: dt2,uj,qbeta,a1,a2,et,gaussian,etotal,tn,ecla,equa,etra
 real(8),dimension(:),allocatable :: ome,c2,kosc,x,p,fx,rm,pm,rn,pn,facn,popt
+real(8),dimension(:),allocatable :: fcla,ftra,fqua
 real(8),dimension(:,:),allocatable :: hm,popn
 real(8),dimension(:,:),allocatable :: hs,lld
 
@@ -46,6 +47,7 @@ call iniconq_d(nosc,lumda_d,ome_max,ome,c2,kosc)
 !allocate(popn(1:nmds+1,1:nmap),facn(1:nmap),popt(1:nmds+1))
 allocate(pop(1:nmds+1),pop1(1:nmds+1),pop2(1:nmds+1),pop3(1:nmds+1))
 allocate(x(1:nosc),p(1:nosc),fx(1:nosc))
+allocate(fcla(1:nosc),ftra(1:nosc),fqua(1:nosc))
 
 if (ng > 9) then
    write(c_nb,'(i2)') ng
@@ -113,7 +115,7 @@ MC: do mcs = 1, nmcs
   
    call get_coeff_fb(ng,beta,vomega,rm,pm,rn,pn,coeff)
 
-   call get_force_fb(nmap,ng,nb,lld,kosc,x,c2,rm,pm,rn,pn,fx)
+   call get_force_fb(nmap,ng,nb,lld,kosc,x,c2,rm,pm,rn,pn,fx,fcla,ftra,fqua)
 
    ib = 1
 
@@ -138,6 +140,7 @@ MC: do mcs = 1, nmcs
    end do
    
    open(747,file='etotal.log')
+   open(748,file='ftotal.log')
    
    MD: do it = 1, nmds
       gaussian=sqrt(4.d0*log(2.d0)/(pi*taw_j**2))*exp(-4.d0*log(2.d0)*((it-0.5d0)*dt-time_j)**2/(taw_j**2))
@@ -178,7 +181,7 @@ MC: do mcs = 1, nmcs
       call evolve_pm(nmap,dt2,hm,rm,pm)
       call evolve_pm(nmap,dt2,hm,rn,pn)
 
-      call get_force_fb(nmap,ng,nb,lld,kosc,x,c2,rm,pm,rn,pn,fx)
+      call get_force_fb(nmap,ng,nb,lld,kosc,x,c2,rm,pm,rn,pn,fx,fcla,ftra,fqua)
       
       do is = 1, nosc
          p(is) = p(is) + dt2*fx(is)
@@ -199,9 +202,10 @@ MC: do mcs = 1, nmcs
       pop2(ib) = pop2(ib) + (fact2)
       pop3(ib) = pop3(ib) + (fact3)
       
-      if (mod(mcs,1000) == 0) then
-         call get_totalenergy_fb(nmap,hm,pm,rm,pn,rn,x,p,kosc,etotal)
-         write(747,*) it, etotal
+      if (mod(mcs,1) == 0) then
+         call get_totalenergy_fb(nmap,hm,pm,rm,pn,rn,x,p,kosc,etotal,ecla,etra,equa)
+         write(747,'(i5,4f20.8)') it, etotal, ecla, etra, equa
+         write(748,'(i5,4f20.8)') it, fx, fcla, ftra, fqua
       end if
    
       if ((pop(ib) /= pop(ib)).or.(pop(ib)-1 == pop(ib))) then
@@ -210,6 +214,9 @@ MC: do mcs = 1, nmcs
    end do MD
 
    close(747)
+   close(748)
+   
+   if (mcs == 1) stop
 
    if (mod(mcs,1000) == 0) then
       open(444,file='temp.out')

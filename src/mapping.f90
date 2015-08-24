@@ -5,12 +5,12 @@ real(8),parameter :: pi=3.1415926535d0
 
 contains
 
-subroutine get_force_fb(nmap,ng,nb,lld,kosc,x,c2,rm,pm,rn,pn,f)
+subroutine get_force_fb(nmap,ng,nb,lld,kosc,x,c2,rm,pm,rn,pn,f,fcla,ftra,fqua)
 implicit none
 
 real(8),dimension(:),allocatable :: c
 real(8),dimension(:),intent(in) :: rm,pm,rn,pn,x
-real(8),dimension(:),intent(out) :: f
+real(8),dimension(:),intent(out) :: f,fcla,ftra,fqua
 
 integer :: a,b,i,j,n
 integer,intent(in) :: nmap,ng,nb
@@ -25,14 +25,16 @@ allocate(c(1:nmap))
 
 n = size(x)
 
-f = 0d0
+fcla = 0d0
+ftra = 0d0
+fqua = 0d0
 !getting product for faster calculation
 do a = 1, nmap
    c(a) = 0.25d0*(rm(a)**2 + pm(a)**2 + rn(a)**2 + pn(a)**2)
 end do
 
 do j = 1, n
-   f(j) = -kosc(j)*x(j)
+   fcla(j) = -kosc(j)*x(j)
    
    mdh = (lld)*(-2d0*c2(j))
    
@@ -40,12 +42,13 @@ do j = 1, n
    do a = 1, nmap
       trace = trace + mdh(a,a)
    end do
+   ftra(j) = trace
 
    do a = 1, nmap
-      f(j) = f(j) + mdh(a,a)*c(a)
+      fqua(j) = fqua(j) + mdh(a,a)*c(a)
    end do
 
-   f(j) = f(j) + trace
+   f(j) = fcla(j) - ftra(j) + fqua(j)
 end do
 
 end subroutine get_force_fb
@@ -122,34 +125,36 @@ tn = trace
 
 end subroutine make_hm_traceless
 
-subroutine get_totalenergy_fb(nmap,hm,pm,rm,pn,rn,x,p,kosc,etotal)
+subroutine get_totalenergy_fb(nmap,hm,pm,rm,pn,rn,x,p,kosc,etotal,ecla,etra,equa)
 implicit none
 
 integer :: i,j,n
 integer,intent(in) :: nmap
 
-real(8),intent(out) :: etotal
+real(8),intent(out) :: etotal,ecla,equa,etra
 real(8),dimension(:),intent(in) :: x,p,kosc,rm,pm,rn,pn
 real(8),dimension(:,:),intent(in) :: hm
 
 n = size(x)
 
-etotal = 0d0
+ecla = 0d0
 !classical part
 do i = 1, n
-   etotal = etotal + 0.5d0*(p(i)**2 + kosc(i)*x(i)**2)
+   ecla = ecla + 0.5d0*(p(i)**2 + kosc(i)*x(i)**2)
 end do
 !trace stuff
+etra = 0d0
 do i = 1, nmap
-   etotal = etotal - hm(i,i)
+   etra = etra + hm(i,i)
 end do
 !quantum part
+equa = 0d0
 do i = 1, nmap
    do j = 1, nmap
-      etotal = etotal + 0.25d0*hm(i,j)*((pm(i)*pm(j) + rm(i)*rm(j)) + (pn(i)*pn(j) + rn(i)*rn(j)))
+      equa = equa + 0.25d0*hm(i,j)*((pm(i)*pm(j) + rm(i)*rm(j)) + (pn(i)*pn(j) + rn(i)*rn(j)))
    end do
 end do
-
+etotal = ecla - etra + equa
 end subroutine get_totalenergy_fb
 
 !subroutine get_totalenergy_traceless(nmap,hm,tn,pm,rm,x,p,kosc,etotal)
