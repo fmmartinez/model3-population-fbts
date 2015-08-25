@@ -13,10 +13,10 @@ module = 'compiler/intel/13.0.1'
 email = 'fmmartin@ualberta.ca'
 
 #number of processors to use
-nproc = 50
+nproc = 100
 
 #trajectories per processor
-tpp = 10000
+tpp = 5000
 
 timestep = '5d-5'
 
@@ -41,8 +41,8 @@ vibomega = 37.7
 
 #basis functions used
 g = 20  
-b = 20  
-d = 20  
+b = 25  
+d = 25  
 
 #delta
 delta = 1
