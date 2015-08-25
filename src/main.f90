@@ -20,7 +20,7 @@ real(8) :: delta,ome_max,dt,lumda_d,eg,eb,ed,mu,e0,beta,time_j,taw_j,omega_j,vom
 real(8) :: dt2,uj,qbeta,a1,a2,et,gaussian,etotal,tn,ecla,equa,etra
 real(8),dimension(:),allocatable :: ome,c2,kosc,x,p,fx,rm,pm,rn,pn,facn,popt
 real(8),dimension(:),allocatable :: fcla,ftra,fqua
-real(8),dimension(:,:),allocatable :: hm,popn
+real(8),dimension(:,:),allocatable :: hm
 real(8),dimension(:,:),allocatable :: hs,lld
 
 type(vsl_stream_state) :: stream
@@ -64,7 +64,7 @@ end if
 fmt1 = '('//trim(c_nb)//'f10.5)'
 fmt2 = '('//trim(c_nt)//'f10.5)'
 
-popn = 0d0
+!popn = 0d0
 pop  = 0d0
 pop1 = 0d0
 pop2 = 0d0
@@ -112,7 +112,7 @@ MC: do mcs = 1, nmcs
       pm = 0d0
       pn = 0d0
    end if
-  
+
    call get_coeff_fb(ng,beta,vomega,rm,pm,rn,pn,coeff)
 
    call get_force_fb(nmap,ng,nb,lld,kosc,x,c2,rm,pm,rn,pn,fx,fcla,ftra,fqua)
@@ -205,12 +205,12 @@ MC: do mcs = 1, nmcs
       if (mod(mcs,1) == 0) then
          call get_totalenergy_fb(nmap,hm,pm,rm,pn,rn,x,p,kosc,etotal,ecla,etra,equa)
          write(747,'(i5,4f20.8)') it, etotal, ecla, etra, equa
-         write(748,'(i5,4f20.8)') it, fx, fcla, ftra, fqua
+         write(748,'(i5,84f20.8)') it, fx, fcla, ftra, fqua, sum(fx), sum(fcla), sum(ftra), sum(fqua)
       end if
    
       if ((pop(ib) /= pop(ib)).or.(pop(ib)-1 == pop(ib))) then
          print *, 'there is overflow in', it, mcs
-      end if   
+      end if
    end do MD
 
    close(747)
@@ -263,6 +263,7 @@ errcode = vsldeletestream(stream)
 deallocate(ome,c2,kosc)
 deallocate(pop,pop1,pop2,pop3)
 deallocate(x,p,fx)
+deallocate(fcla,ftra,fqua)
 deallocate(rm,pm,rn,pn)
 deallocate(hm,hs,lld)
 

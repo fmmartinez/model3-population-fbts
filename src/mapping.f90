@@ -18,9 +18,9 @@ integer,intent(in) :: nmap,ng,nb
 real(8) :: trace,tn
 real(8),dimension(:),intent(in) :: kosc,c2
 real(8),dimension(:,:),intent(in) :: lld
-real(8),dimension(:,:),allocatable :: mdh
+!real(8),dimension(:,:),allocatable :: mdh
 
-allocate(mdh(1:nmap,1:nmap))
+!allocate(mdh(1:nmap,1:nmap))
 allocate(c(1:nmap))
 
 n = size(x)
@@ -29,23 +29,26 @@ fcla = 0d0
 ftra = 0d0
 fqua = 0d0
 !getting product for faster calculation
-do a = 1, nmap
+c = 0d0
+do a = ng+nb+1, nmap
    c(a) = 0.25d0*(rm(a)**2 + pm(a)**2 + rn(a)**2 + pn(a)**2)
 end do
 
 do j = 1, n
    fcla(j) = -kosc(j)*x(j)
    
-   mdh = (lld)*(-2d0*c2(j))
+!   mdh = (lld)*(-2d0*c2(j))
    
-   trace = 0d0
-   do a = 1, nmap
-      trace = trace + mdh(a,a)
-   end do
-   ftra(j) = trace
+!   trace = 0d0
+!   do a = 1, nmap
+!      trace = trace + mdh(a,a)
+!   end do
+!   ftra(j) = trace
+   ftra(j) = (nmap-ng-nb)*(-2d0*c2(j))
 
-   do a = 1, nmap
-      fqua(j) = fqua(j) + mdh(a,a)*c(a)
+   do a = ng+nb+1, nmap
+      !fqua(j) = fqua(j) + mdh(a,a)*c(a)
+      fqua(j) = fqua(j) + (-2d0*c2(j))*c(a)
    end do
 
    f(j) = fcla(j) - ftra(j) + fqua(j)
@@ -151,7 +154,7 @@ end do
 equa = 0d0
 do i = 1, nmap
    do j = 1, nmap
-      equa = equa + 0.25d0*hm(i,j)*((pm(i)*pm(j) + rm(i)*rm(j)) + (pn(i)*pn(j) + rn(i)*rn(j)))
+      equa = equa + 0.25d0*hm(i,j)*(pm(i)*pm(j) + rm(i)*rm(j) + pn(i)*pn(j) + rn(i)*rn(j))
    end do
 end do
 etotal = ecla - etra + equa
