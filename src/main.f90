@@ -140,7 +140,7 @@ MC: do mcs = 1, nmcs
    end do
    
    open(747,file='etotal.log')
-   open(748,file='ftotal.log')
+!   open(748,file='ftotal.log')
    
    MD: do it = 1, nmds
       gaussian=sqrt(4.d0*log(2.d0)/(pi*taw_j**2))*exp(-4.d0*log(2.d0)*((it-0.5d0)*dt-time_j)**2/(taw_j**2))
@@ -202,10 +202,10 @@ MC: do mcs = 1, nmcs
       pop2(ib) = pop2(ib) + (fact2)
       pop3(ib) = pop3(ib) + (fact3)
       
-      if (mod(mcs,1) == 0) then
+      if (mod(mcs,2000) == 0) then
          call get_totalenergy_fb(nmap,hm,pm,rm,pn,rn,x,p,kosc,etotal,ecla,etra,equa)
          write(747,'(i5,4f20.8)') it, etotal, ecla, etra, equa
-         write(748,'(i5,84f20.8)') it, fx, fcla, ftra, fqua, sum(fx), sum(fcla), sum(ftra), sum(fqua)
+         !write(748,'(i5,84f20.8)') it, fx, fcla, ftra, fqua, sum(fx), sum(fcla), sum(ftra), sum(fqua)
       end if
    
       if ((pop(ib) /= pop(ib)).or.(pop(ib)-1 == pop(ib))) then
@@ -214,7 +214,7 @@ MC: do mcs = 1, nmcs
    end do MD
 
    close(747)
-   close(748)
+!   close(748)
    
    if (mcs == 1) stop
 
