@@ -1,5 +1,8 @@
+include 'mkl_vsl.f90'
+
 program popmodel3
-use ifport
+use mkl_vsl_type
+use mkl_vsl
 use m_map
 implicit none
 
@@ -9,40 +12,42 @@ character(len=9) :: fmt1,fmt2
 complex(8) :: coeff,fact1,fact2,fact3
 complex(8),dimension(:),allocatable :: pop,pop1,pop2,pop3
 
-integer :: a,b,i,j,ng,nb,nd,basispc,nmap,cont
-integer :: np,nosc,nmcs,nmds,seed_dimension,bath,init,mcs,it,is,ib
-!integer,dimension(:),allocatable :: seed
+integer :: i,ng,nb,nd,nmap
+integer :: np,nosc,nmcs,nmds,seed,bath,init,mcs,it,is,ib
+integer :: brng,errcode,method
 
-real(8) :: delta,ome_max,dt,lumda_d,eg,eb,ed,mu,e0,beta,time_j,taw_j,omega_j,check,vomega
-real(8) :: dt2,uj,qbeta,lambdacheck,a1,a2,et,gaussian,etotal,tn
+real(8) :: delta,ome_max,dt,lumda_d,eg,eb,ed,mu,e0,beta,time_j,taw_j,omega_j,vomega
+real(8) :: dt2,uj,qbeta,a1,a2,et,gaussian,etotal,tn,ecla,equa,etra
 real(8),dimension(:),allocatable :: ome,c2,kosc,x,p,fx,rm,pm,rn,pn,facn,popt
-real(8),dimension(:,:),allocatable :: hm,lambda,popn,ug,ub,ud,hc
-real(8),dimension(:,:),allocatable :: sgg,sgb,sgd,sbg,sbb,sbd,sdg,sdb,sdd,hs,lld
-real(8),dimension(:,:),allocatable :: llg,llb,llgb,llbg,lldb,llbd
+real(8),dimension(:),allocatable :: fcla,ftra,fqua
+real(8),dimension(:,:),allocatable :: hm
+real(8),dimension(:,:),allocatable :: hs,lld
+
+type(vsl_stream_state) :: stream
 
 call iniconc()
 
-call srand(seed_dimension)
-
 nmap = ng + nb + nd
+!initializing intel MKL implementation for generating random numbers from gaussian distribution
+!basic generator: set of Mersenne Twister pseudorandom number generators
+brng = VSL_BRNG_MT2203
+!box muller implementation for generating gaussian distribution random numbers
+method = VSL_RNG_METHOD_GAUSSIAN_BOXMULLER 
+!getting stream
+errcode = vslnewstream(stream,brng,seed)
 
 allocate(ome(1:nosc),c2(1:nosc),kosc(1:nosc))
 allocate(rm(1:nmap),pm(1:nmap))
 allocate(rn(1:nmap),pn(1:nmap))
-allocate(sgg(1:ng,1:ng),sgb(1:ng,1:nb),sgd(1:ng,1:nd))
-allocate(sbg(1:nb,1:ng),sbb(1:nb,1:nb),sbd(1:nb,1:nd))
-allocate(sdg(1:nd,1:ng),sdb(1:nd,1:nb),sdd(1:nd,1:nd))
-allocate(hm(1:nmap,1:nmap),hc(1:nmap,1:nmap),hs(1:nmap,1:nmap))
-allocate(ug(1:nmap,1:nmap),ub(1:nmap,1:nmap),ud(1:nmap,1:nmap))
-allocate(lambda(1:nmap,1:nmap),llg(1:nmap,1:nmap),llb(1:nmap,1:nmap),lld(1:nmap,1:nmap))
-allocate(llgb(1:nmap,1:nmap),llbg(1:nmap,1:nmap))
-allocate(llbd(1:nmap,1:nmap),lldb(1:nmap,1:nmap))
+allocate(hm(1:nmap,1:nmap),hs(1:nmap,1:nmap))
+allocate(lld(1:nmap,1:nmap))
 
 call iniconq_d(nosc,lumda_d,ome_max,ome,c2,kosc)
 
-allocate(popn(1:nmds+1,1:nmap),facn(1:nmap),popt(1:nmds+1))
+!allocate(popn(1:nmds+1,1:nmap),facn(1:nmap),popt(1:nmds+1))
 allocate(pop(1:nmds+1),pop1(1:nmds+1),pop2(1:nmds+1),pop3(1:nmds+1))
 allocate(x(1:nosc),p(1:nosc),fx(1:nosc))
+allocate(fcla(1:nosc),ftra(1:nosc),fqua(1:nosc))
 
 if (ng > 9) then
    write(c_nb,'(i2)') ng
@@ -59,7 +64,7 @@ end if
 fmt1 = '('//trim(c_nb)//'f10.5)'
 fmt2 = '('//trim(c_nt)//'f10.5)'
 
-popn = 0d0
+!popn = 0d0
 pop  = 0d0
 pop1 = 0d0
 pop2 = 0d0
@@ -79,34 +84,38 @@ do i = ng+nb+1, nmap
 end do
 
 MC: do mcs = 1, nmcs
+   errcode = vdrnggaussian(method,stream,nosc,p,0d0,1d0)
+   errcode = vdrnggaussian(method,stream,nosc,x,0d0,1d0)
    do is=1,nosc
       uj = 0.5d0*beta*dsqrt(kosc(is))
       
       qbeta = beta/(uj/tanh(uj))
       
-      p(is) = gauss_noise2()/dsqrt(qbeta)
-      x(is) = gauss_noise2()/dsqrt(qbeta*kosc(is))
+      p(is) = p(is)/dsqrt(qbeta)
+      x(is) = x(is)/dsqrt(qbeta*kosc(is))
       
       if(bath == 1) x(is)=x(is)+c2(is)/kosc(is)
    end do
    
    if (init == 3) then
-      do i = 1, nmap
-         rm(i) = gauss_noise2()/sqrt(2d0)
-         rn(i) = gauss_noise2()/sqrt(2d0)
-         pm(i) = gauss_noise2()/sqrt(2d0)
-         pn(i) = gauss_noise2()/sqrt(2d0)
-      end do
+      errcode = vdrnggaussian(method,stream,nmap,rm,0d0,1d0)
+      rm = rm/sqrt(2d0)
+      errcode = vdrnggaussian(method,stream,nmap,rn,0d0,1d0)
+      rn = rn/sqrt(2d0)
+      errcode = vdrnggaussian(method,stream,nmap,pm,0d0,1d0)
+      pm = pm/sqrt(2d0)
+      errcode = vdrnggaussian(method,stream,nmap,pn,0d0,1d0)
+      pn = pn/sqrt(2d0)
    else
       rm = 0d0
       rn = 0d0
       pm = 0d0
       pn = 0d0
    end if
-  
-   call get_coeff(ng,beta,vomega,rm,pm,rn,pn,coeff)
 
-   call get_force_fb(nmap,ng,nb,lld,kosc,x,c2,rm,pm,rn,pn,fx)
+   call get_coeff_fb(ng,beta,vomega,rm,pm,rn,pn,coeff)
+
+   call get_force_fb(nmap,ng,nb,lld,kosc,x,c2,rm,pm,rn,pn,fx,fcla,ftra,fqua)
 
    ib = 1
 
@@ -116,7 +125,7 @@ MC: do mcs = 1, nmcs
 !      popt(ib)   = popt(ib) + facn(i)
 !   end do
 
-   call get_facts_pop(nmap,ng,nb,coeff,rm,pm,rn,pn,fact1,fact2,fact3)
+   call get_facts_pop_fb(nmap,ng,nb,coeff,rm,pm,rn,pn,fact1,fact2,fact3)
 
    pop(ib)  = pop(ib)  + (fact1+fact2+fact3)
    pop1(ib) = pop1(ib) + (fact1)
@@ -131,6 +140,7 @@ MC: do mcs = 1, nmcs
    end do
    
    open(747,file='etotal.log')
+!   open(748,file='ftotal.log')
    
    MD: do it = 1, nmds
       gaussian=sqrt(4.d0*log(2.d0)/(pi*taw_j**2))*exp(-4.d0*log(2.d0)*((it-0.5d0)*dt-time_j)**2/(taw_j**2))
@@ -171,7 +181,7 @@ MC: do mcs = 1, nmcs
       call evolve_pm(nmap,dt2,hm,rm,pm)
       call evolve_pm(nmap,dt2,hm,rn,pn)
 
-      call get_force_fb(nmap,ng,nb,lld,kosc,x,c2,rm,pm,rn,pn,fx)
+      call get_force_fb(nmap,ng,nb,lld,kosc,x,c2,rm,pm,rn,pn,fx,fcla,ftra,fqua)
       
       do is = 1, nosc
          p(is) = p(is) + dt2*fx(is)
@@ -185,20 +195,28 @@ MC: do mcs = 1, nmcs
 !         popt(ib)   = popt(ib) + facn(i)
 !      end do
 
-      call get_facts_pop(nmap,ng,nb,coeff,rm,pm,rn,pn,fact1,fact2,fact3)
+      call get_facts_pop_fb(nmap,ng,nb,coeff,rm,pm,rn,pn,fact1,fact2,fact3)
       
       pop(ib)  = pop(ib)  + (fact1+fact2+fact3)
       pop1(ib) = pop1(ib) + (fact1)
       pop2(ib) = pop2(ib) + (fact2)
       pop3(ib) = pop3(ib) + (fact3)
       
-      !if (mod(mcs,1000) == 0) then
-      !   call get_totalenergy_traceless(nmap,hm,tn,pm,rm,x,p,kosc,etotal)
-      !   write(747,*) it, etotal
-      !end if
+      if (mod(mcs,2000) == 0) then
+         call get_totalenergy_fb(nmap,hm,pm,rm,pn,rn,x,p,kosc,etotal,ecla,etra,equa)
+         write(747,'(i5,4f20.8)') it, etotal, ecla, etra, equa
+         !write(748,'(i5,84f20.8)') it, fx, fcla, ftra, fqua, sum(fx), sum(fcla), sum(ftra), sum(fqua)
+      end if
+   
+      if ((pop(ib) /= pop(ib)).or.(pop(ib)-1 == pop(ib))) then
+         print *, 'there is overflow in', it, mcs
+      end if
    end do MD
 
    close(747)
+!   close(748)
+   
+!   if (mcs == 1) stop
 
    if (mod(mcs,1000) == 0) then
       open(444,file='temp.out')
@@ -239,9 +257,16 @@ do ib = 1, nmds+1
    write(333,'(i10,4f20.9)') ib-1, dble(pop1(ib)),dble(pop2(ib)),dble(pop3(ib)),dble(pop(ib))!/dnmcs
 end do
 
+!Memory deallocations
+errcode = vsldeletestream(stream)
+
 deallocate(ome,c2,kosc)
 deallocate(pop,pop1,pop2,pop3)
-deallocate(x,p)
+deallocate(x,p,fx)
+deallocate(fcla,ftra,fqua)
+deallocate(rm,pm,rn,pn)
+deallocate(hm,hs,lld)
+
 
 contains
 
@@ -254,7 +279,7 @@ open (666,file='md.in')
 read(666,*)
 read(666,*) np,delta,nosc,ome_max
 read(666,*)
-read(666,*) nmcs,nmds,seed_dimension,dt,lumda_d
+read(666,*) nmcs,nmds,seed,dt,lumda_d
 read(666,*)
 read(666,*) eg,eb,ed,mu,e0,beta,vomega
 read(666,*)
@@ -264,13 +289,6 @@ read(666,*) bath,init
 read(666,*)
 read(666,*) ng,nb,nd
 close(666)
-
-!call random_seed(size=seed_dimension)
-!allocate (seed(seed_dimension))
-!do i=1,seed_dimension
-!  seed(i) = 3*2**i-1
-!enddo
-!call random_seed(put=seed)
 
 end subroutine iniconc
 

@@ -1,16 +1,16 @@
 module m_map
-use ifport
 implicit none
 
 real(8),parameter :: pi=3.1415926535d0
 
 contains
 
-subroutine get_force_fb(nmap,ng,nb,lld,kosc,x,c2,rm,pm,rn,pn,f)
+subroutine get_force_fb(nmap,ng,nb,lld,kosc,x,c2,rm,pm,rn,pn,f,fcla,ftra,fqua)
 implicit none
 
+real(8),dimension(:),allocatable :: c
 real(8),dimension(:),intent(in) :: rm,pm,rn,pn,x
-real(8),dimension(:),intent(out) :: f
+real(8),dimension(:),intent(out) :: f,fcla,ftra,fqua
 
 integer :: a,b,i,j,n
 integer,intent(in) :: nmap,ng,nb
@@ -18,81 +18,89 @@ integer,intent(in) :: nmap,ng,nb
 real(8) :: trace,tn
 real(8),dimension(:),intent(in) :: kosc,c2
 real(8),dimension(:,:),intent(in) :: lld
-real(8),dimension(:,:),allocatable :: dh
+!real(8),dimension(:,:),allocatable :: mdh
 
-allocate(dh(1:nmap,1:nmap))
+!allocate(mdh(1:nmap,1:nmap))
+allocate(c(1:nmap))
 
 n = size(x)
 
-f = 0d0
+fcla = 0d0
+ftra = 0d0
+fqua = 0d0
+!getting product for faster calculation
+c = 0d0
+do a = ng+nb+1, nmap
+   c(a) = 0.25d0*(rm(a)**2 + pm(a)**2 + rn(a)**2 + pn(a)**2)
+end do
+
 do j = 1, n
-   f(j) = -kosc(j)*x(j)
+   fcla(j) = -kosc(j)*x(j)
    
-   dh = (lld)*c2(j)
+!   mdh = (lld)*(-2d0*c2(j))
    
-   trace = 0d0
-   do a = 1, nmap
-      trace = trace + dh(a,a)
+!   trace = 0d0
+!   do a = 1, nmap
+!      trace = trace + mdh(a,a)
+!   end do
+!   ftra(j) = trace
+   ftra(j) = (nmap-ng-nb)*(-2d0*c2(j))
+
+   do a = ng+nb+1, nmap
+      !fqua(j) = fqua(j) + mdh(a,a)*c(a)
+      fqua(j) = fqua(j) + (-2d0*c2(j))*c(a)
    end do
 
-   tn = trace/nmap
-   
-   f(j) = f(j) + tn
-
-   do a = 1, nmap
-      do b = 1, nmap
-         f(j) = f(j) - 0.5d0*dh(a,b)*(rm(a)*rm(b) + pm(a)*pm(b) + rn(a)*rn(b) + pn(a)*pn(b))
-      end do
-   end do
+   f(j) = fcla(j) - ftra(j) + fqua(j)
 end do
 
 end subroutine get_force_fb
 
-subroutine get_force_traceless(nmap,ng,nb,lld,kosc,x,c2,rm,pm,f)
-implicit none
-
-real(8),dimension(:),intent(in) :: rm,pm,x
-real(8),dimension(:),intent(out) :: f
-
-integer :: a,b,i,j,n
-integer,intent(in) :: nmap,ng,nb
-
-real(8) :: trace,tn
-real(8),dimension(:),intent(in) :: kosc,c2
-real(8),dimension(:,:),intent(in) :: lld
-real(8),dimension(:,:),allocatable :: dh
-
-allocate(dh(1:nmap,1:nmap))
-
-n = size(x)
-
-f = 0d0
-do j = 1, n
-   f(j) = -kosc(j)*x(j)
-   
-   dh = (lld)*c2(j)
-   
-   trace = 0d0
-   do a = 1, nmap
-      trace = trace + dh(a,a)
-   end do
-
-   tn = trace/nmap
-   
-   f(j) = f(j) + tn
-
-   do a = 1, nmap
-      do b = 1, nmap
-         if (a == b) then
-            f(j) = f(j) - (dh(a,b) - tn)*(rm(a)*rm(b) + pm(a)*pm(b))
-         else
-            f(j) = f(j) - dh(a,b)*(rm(a)*rm(b) + pm(a)*pm(b))
-         end if
-      end do
-   end do
-end do
-
-end subroutine get_force_traceless
+!subroutine get_force_traceless(nmap,ng,nb,lld,kosc,x,c2,rm,pm,f)
+!implicit none
+!
+!real(8),dimension(:),intent(in) :: rm,pm,x
+!real(8),dimension(:),intent(out) :: f
+!
+!integer :: a,b,i,j,n
+!integer,intent(in) :: nmap,ng,nb
+!
+!real(8) :: trace,tn
+!real(8),dimension(:),intent(in) :: kosc,c2
+!real(8),dimension(:,:),intent(in) :: lld
+!real(8),dimension(:,:),allocatable :: dh
+!
+!allocate(dh(1:nmap,1:nmap))
+!
+!n = size(x)
+!
+!f = 0d0
+!do j = 1, n
+!   f(j) = -kosc(j)*x(j)
+!   
+!   dh = (lld)*c2(j)
+!   
+!   trace = 0d0
+!   do a = 1, nmap
+!      trace = trace + dh(a,a)
+!   end do
+!
+!   tn = trace/nmap
+!   
+!   f(j) = f(j) + tn
+!
+!   do a = 1, nmap
+!      do b = 1, nmap
+!         if (a == b) then
+!            f(j) = f(j) - (dh(a,b) - tn)*(rm(a)*rm(b) + pm(a)*pm(b))
+!         else
+!            f(j) = f(j) - dh(a,b)*(rm(a)*rm(b) + pm(a)*pm(b))
+!         end if
+!      end do
+!   end do
+!end do
+!
+!end subroutine get_force_traceless
 
 subroutine make_hm_traceless(nmap,hm,tn)
 implicit none
@@ -120,65 +128,67 @@ tn = trace
 
 end subroutine make_hm_traceless
 
-subroutine get_totalenergy(nmap,hm,pm,rm,x,p,kosc,etotal)
+subroutine get_totalenergy_fb(nmap,hm,pm,rm,pn,rn,x,p,kosc,etotal,ecla,etra,equa)
 implicit none
 
 integer :: i,j,n
 integer,intent(in) :: nmap
 
-real(8),intent(out) :: etotal
-real(8),dimension(:),intent(in) :: x,p,kosc,rm,pm
+real(8),intent(out) :: etotal,ecla,equa,etra
+real(8),dimension(:),intent(in) :: x,p,kosc,rm,pm,rn,pn
 real(8),dimension(:,:),intent(in) :: hm
 
 n = size(x)
 
-etotal = 0d0
+ecla = 0d0
 !classical part
 do i = 1, n
-   etotal = etotal + 0.5d0*(p(i)**2 + kosc(i)*x(i)**2)
+   ecla = ecla + 0.5d0*(p(i)**2 + kosc(i)*x(i)**2)
 end do
-!mapping part
+!trace stuff
+etra = 0d0
+do i = 1, nmap
+   etra = etra + hm(i,i)
+end do
+!quantum part
+equa = 0d0
 do i = 1, nmap
    do j = 1, nmap
-      if (i == j) then
-         etotal = etotal + 0.5d0*(hm(i,j)*(pm(i)*pm(j) + rm(i)*rm(j) - 1d0))
-      else
-         etotal = etotal + 0.5d0*(hm(i,j)*(pm(i)*pm(j) + rm(i)*rm(j)))
-      end if
+      equa = equa + 0.25d0*hm(i,j)*(pm(i)*pm(j) + rm(i)*rm(j) + pn(i)*pn(j) + rn(i)*rn(j))
    end do
 end do
+etotal = ecla - etra + equa
+end subroutine get_totalenergy_fb
 
-end subroutine get_totalenergy
+!subroutine get_totalenergy_traceless(nmap,hm,tn,pm,rm,x,p,kosc,etotal)
+!implicit none
+!
+!integer :: i,j,n
+!integer,intent(in) :: nmap
+!
+!real(8),intent(in) :: tn
+!real(8),intent(out) :: etotal
+!real(8),dimension(:),intent(in) :: x,p,kosc,rm,pm
+!real(8),dimension(:,:),intent(in) :: hm
+!
+!n = size(x)
+!
+!etotal = 0d0
+!!classical part
+!do i = 1, n
+!   etotal = etotal + 0.5d0*(p(i)**2 + kosc(i)*x(i)**2)
+!end do
+!!mapping part
+!etotal = etotal + tn
+!do i = 1, nmap
+!   do j = 1, nmap
+!      etotal = etotal + 0.5d0*(hm(i,j)*(pm(i)*pm(j) + rm(i)*rm(j)))
+!   end do
+!end do
+!
+!end subroutine get_totalenergy_traceless
 
-subroutine get_totalenergy_traceless(nmap,hm,tn,pm,rm,x,p,kosc,etotal)
-implicit none
-
-integer :: i,j,n
-integer,intent(in) :: nmap
-
-real(8),intent(in) :: tn
-real(8),intent(out) :: etotal
-real(8),dimension(:),intent(in) :: x,p,kosc,rm,pm
-real(8),dimension(:,:),intent(in) :: hm
-
-n = size(x)
-
-etotal = 0d0
-!classical part
-do i = 1, n
-   etotal = etotal + 0.5d0*(p(i)**2 + kosc(i)*x(i)**2)
-end do
-!mapping part
-etotal = etotal + tn
-do i = 1, nmap
-   do j = 1, nmap
-      etotal = etotal + 0.5d0*(hm(i,j)*(pm(i)*pm(j) + rm(i)*rm(j)))
-   end do
-end do
-
-end subroutine get_totalenergy_traceless
-
-subroutine get_coeff(ng,beta,omega,rm,pm,rn,pn,coeff)
+subroutine get_coeff_fb(ng,beta,omega,rm,pm,rn,pn,coeff)
 implicit none
 
 complex(8),intent(out) :: coeff
@@ -213,7 +223,7 @@ end do
 
 deallocate(exp_be)
 deallocate(prob)
-end subroutine get_coeff
+end subroutine get_coeff_fb
 
 subroutine evolve_rm(nmap,dt,hm,pm,rm)
 implicit none
@@ -253,68 +263,68 @@ end do
 
 end subroutine evolve_pm
 
-subroutine get_facts_pop_traceless(nmap,coeff,llg,llb,lld,rm,pm,fact1,fact2,fact3)
-implicit none
+!subroutine get_facts_pop_traceless(nmap,coeff,llg,llb,lld,rm,pm,fact1,fact2,fact3)
+!implicit none
+!
+!integer :: a,b,i
+!integer,intent(in) :: nmap
+!
+!real(8) :: trt
+!real(8),intent(in) :: coeff
+!real(8),intent(out) :: fact1,fact2,fact3
+!real(8),dimension(:),intent(in) :: rm,pm
+!real(8),dimension(:,:),intent(in) :: llg,llb,lld
+!
+!trt = 0d0
+!do i = 1, nmap
+!   trt = trt + llg(i,i)
+!end do
+!fact1 = trt/nmap
+!do a = 1, nmap
+!   do b = 1, nmap
+!      if (a == b) then
+!         fact1 = fact1 + 0.5d0*(llg(a,b) - trt/nmap)*(rm(a)*rm(b) + pm(a)*pm(b))
+!      else
+!         fact1 = fact1 + 0.5d0*(llg(a,b))*(rm(a)*rm(b) + pm(a)*pm(b))
+!      end if
+!   end do
+!end do
+!fact1 = coeff*fact1
+!
+!trt = 0d0
+!do i = 1, nmap
+!   trt = trt + llb(i,i)
+!end do
+!fact2 = trt/nmap
+!do a = 1, nmap
+!   do b = 1, nmap
+!      if (a == b) then
+!         fact2 = fact2 + 0.5d0*(llb(a,b) - trt/nmap)*(rm(a)*rm(b) + pm(a)*pm(b))
+!      else
+!         fact2 = fact2 + 0.5d0*llb(a,b)*(rm(a)*rm(b) + pm(a)*pm(b))
+!      end if
+!   end do
+!end do
+!fact2 = coeff*fact2
+!
+!trt = 0d0
+!do i = 1, nmap
+!   trt = trt + lld(i,i)
+!end do
+!fact3 = trt/nmap
+!do a = 1, nmap
+!   do b = 1, nmap
+!      if (a == b) then
+!         fact3 = fact3 + 0.5d0*(lld(a,b) - trt/nmap)*(rm(a)*rm(b) + pm(a)*pm(b))
+!      else
+!         fact3 = fact3 + 0.5d0*lld(a,b)*(rm(a)*rm(b) + pm(a)*pm(b))
+!      end if
+!   end do
+!end do
+!fact3 = coeff*fact3
+!end subroutine get_facts_pop_traceless
 
-integer :: a,b,i
-integer,intent(in) :: nmap
-
-real(8) :: trt
-real(8),intent(in) :: coeff
-real(8),intent(out) :: fact1,fact2,fact3
-real(8),dimension(:),intent(in) :: rm,pm
-real(8),dimension(:,:),intent(in) :: llg,llb,lld
-
-trt = 0d0
-do i = 1, nmap
-   trt = trt + llg(i,i)
-end do
-fact1 = trt/nmap
-do a = 1, nmap
-   do b = 1, nmap
-      if (a == b) then
-         fact1 = fact1 + 0.5d0*(llg(a,b) - trt/nmap)*(rm(a)*rm(b) + pm(a)*pm(b))
-      else
-         fact1 = fact1 + 0.5d0*(llg(a,b))*(rm(a)*rm(b) + pm(a)*pm(b))
-      end if
-   end do
-end do
-fact1 = coeff*fact1
-
-trt = 0d0
-do i = 1, nmap
-   trt = trt + llb(i,i)
-end do
-fact2 = trt/nmap
-do a = 1, nmap
-   do b = 1, nmap
-      if (a == b) then
-         fact2 = fact2 + 0.5d0*(llb(a,b) - trt/nmap)*(rm(a)*rm(b) + pm(a)*pm(b))
-      else
-         fact2 = fact2 + 0.5d0*llb(a,b)*(rm(a)*rm(b) + pm(a)*pm(b))
-      end if
-   end do
-end do
-fact2 = coeff*fact2
-
-trt = 0d0
-do i = 1, nmap
-   trt = trt + lld(i,i)
-end do
-fact3 = trt/nmap
-do a = 1, nmap
-   do b = 1, nmap
-      if (a == b) then
-         fact3 = fact3 + 0.5d0*(lld(a,b) - trt/nmap)*(rm(a)*rm(b) + pm(a)*pm(b))
-      else
-         fact3 = fact3 + 0.5d0*lld(a,b)*(rm(a)*rm(b) + pm(a)*pm(b))
-      end if
-   end do
-end do
-fact3 = coeff*fact3
-end subroutine get_facts_pop_traceless
-
-subroutine get_facts_pop(nmap,ng,nb,coeff,rm,pm,rn,pn,fact1,fact2,fact3)
+subroutine get_facts_pop_fb(nmap,ng,nb,coeff,rm,pm,rn,pn,fact1,fact2,fact3)
 implicit none
 
 complex(8),intent(in) :: coeff
@@ -342,7 +352,7 @@ do a = ng+nb+1, nmap
    fact3 = fact3 + cmplx(rm(a),-pm(a))*cmplx(rn(a),pn(a))
 end do
 fact3 = coeff*fact3
-end subroutine get_facts_pop
+end subroutine get_facts_pop_fb
 
 function kronecker_delta(i,j) result (d)
 implicit none
@@ -714,20 +724,5 @@ end do
 write(6,*) check
 
 end subroutine iniconq_d
-
-function gauss_noise2() result(g)
-implicit none
-
-real(8),parameter :: pi2=2.0*3.141592654
-
-real(8) :: g,z1,z2
-
-!call random_number(z1)
-!call random_number(z2)
-z1 = rand()
-z2 = rand()
-g = sqrt(-2.d0*log(z1))*cos(pi2*z2)
-
-end function gauss_noise2
 
 end module m_map
