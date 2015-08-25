@@ -216,7 +216,7 @@ MC: do mcs = 1, nmcs
    close(747)
 !   close(748)
    
-   if (mcs == 1) stop
+!   if (mcs == 1) stop
 
    if (mod(mcs,1000) == 0) then
       open(444,file='temp.out')
