@@ -6,19 +6,20 @@ import shutil
 
 #modules to load for execution in certain clusters, leave blank if none
 #following is used for jasper
-module = 'compiler/intel/13.0.1'
-#module = ''
+#module = 'compiler/intel/13.0.1'
+module = ''
 
 #TORQUE will use the following email to inform details about your jobs
 email = 'fmmartin@ualberta.ca'
 
 #number of processors to use
-nproc = 100
+nproc = 50
 
 #trajectories per processor
-tpp = 5000
+tpp = 2000
 
-timestep = '5d-5'
+timestep = '1d-5'
+nts = '20000'
 
 #Wall time
 walltime = '24:00:00'
@@ -146,7 +147,7 @@ for i in range(0,nproc):
 	
 	seed = i
 
-	l[3] = str(tpp) + '\t4000\t' + str(seed) + '\t' + timestep + '\t10d0\r\n'
+	l[3] = str(tpp) + '\t' + nts + '\t' + str(seed) + '\t' + timestep + '\t10d0\r\n'
 
 	for j in range(0,12):
 		mdfile.write(l[j])
@@ -161,7 +162,7 @@ m.append('#PBS -l walltime=' + walltime + '\n')
 m.append('#PBS -l procs=1\n')
 m.append('#PBS -l mem=256mb\n')
 m.append('')
-m.append('#PBS -M' + email + '\n')
+m.append('#PBS -M ' + email + '\n')
 m.append('cd $PBS_O_WORKDIR\n')
 m.append('module load ' + module + '\n')
 m.append('time ./a.out < md.in\n')
