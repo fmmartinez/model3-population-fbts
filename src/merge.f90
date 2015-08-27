@@ -5,7 +5,7 @@ character(len=17) :: n,fname
 
 integer :: i,ib,t,nbt
 
-real(8),dimension(1:4001) :: pop1,pop2,pop3,pop,m1,m2,m3,mt
+real(8),dimension(1:20001) :: pop1,pop2,pop3,pop,m1,m2,m3,mt
 
 mt = 0d0
 m1 = 0d0
@@ -36,7 +36,7 @@ do i = 1, nbt
 !print *, fname
    open (11,file=fname)
    
-   do ib = 1, 4001
+   do ib = 1, 20001
       read(11,'(i10,4f20.9)') t, pop1(ib), pop2(ib), pop3(ib), pop(ib)
       
       mt(ib) = mt(ib) + pop(ib)
@@ -50,7 +50,7 @@ do i = 1, nbt
 end do
 
 open(12,file='final.log')
-do ib = 1, 4001
+do ib = 1, 20001
    pop1(ib) = m1(ib)/mt(ib)
    pop2(ib) = m2(ib)/mt(ib)
    pop3(ib) = m3(ib)/mt(ib)
