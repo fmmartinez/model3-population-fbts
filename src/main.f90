@@ -115,7 +115,7 @@ MC: do mcs = 1, nmcs
 
    call get_coeff_fb(ng,beta,vomega,rm,pm,rn,pn,coeff)
 
-   call get_force_fb(nmap,ng,nb,lld,kosc,x,c2,rm,pm,rn,pn,fx,fcla,ftra,fqua)
+   call get_traceless_force_fb(nmap,ng,nb,lld,kosc,x,c2,rm,pm,rn,pn,fx,fcla,ftra,fqua)
 
    ib = 1
 
@@ -181,7 +181,7 @@ MC: do mcs = 1, nmcs
       call evolve_pm(nmap,dt2,hm,rm,pm)
       call evolve_pm(nmap,dt2,hm,rn,pn)
 
-      call get_force_fb(nmap,ng,nb,lld,kosc,x,c2,rm,pm,rn,pn,fx,fcla,ftra,fqua)
+      call get_traceless_force_fb(nmap,ng,nb,lld,kosc,x,c2,rm,pm,rn,pn,fx,fcla,ftra,fqua)
       
       do is = 1, nosc
          p(is) = p(is) + dt2*fx(is)
