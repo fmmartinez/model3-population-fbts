@@ -118,13 +118,11 @@ do i = 1, nmap
    trace = trace + hm(i,i)
 end do
 
-trace = trace/nmap
+tn = trace/nmap
 
 do i = 1, nmap
-   hm(i,i) = hm(i,i) - trace
+   hm(i,i) = hm(i,i) - tn
 end do
-
-tn = trace
 
 end subroutine make_hm_traceless
 
