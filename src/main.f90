@@ -204,7 +204,8 @@ MC: do mcs = 1, nmcs
       
       if (mod(mcs,2000) == 0) then
          call get_totalenergy_fb(nmap,hm,pm,rm,pn,rn,x,p,kosc,etotal,ecla,etra,equa)
-         write(747,'(i5,4f20.8)') it, etotal, ecla, etra, equa
+         etotal = etotal + tn
+         write(747,'(i5,4f20.8)') it, etotal, ecla, tn, equa
          !write(748,'(i5,84f20.8)') it, fx, fcla, ftra, fqua, sum(fx), sum(fcla), sum(ftra), sum(fqua)
       end if
    
